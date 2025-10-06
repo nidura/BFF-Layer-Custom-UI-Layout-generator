@@ -148,6 +148,7 @@ export default function Canvas({ widgets, onSelect, onDelete }) {
 
     const renderPillCard = (w) => {
         const p = w.props || {};
+        const size = p.left?.size ?? 44;
         return (
             <div
                 key={w.id}
@@ -173,16 +174,26 @@ export default function Canvas({ widgets, onSelect, onDelete }) {
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                         <div
                             style={{
-                                width: 44,
-                                height: 44,
-                                borderRadius: 22,
+                                width: size,
+                                height: size,
+                                borderRadius: size / 2,
                                 background: p.left?.bg || '#f1f5f9',
                                 display: 'flex',
                                 alignItems: 'center',
-                                justifyContent: 'center'
+                                justifyContent: 'center',
+                                overflow: 'hidden'
                             }}
                         >
-                            <span style={{ fontSize: 18 }}>{p.left?.emoji || '•'}</span>
+                            {p.left?.url ? (
+                                <img
+                                    src={p.left.url}
+                                    alt=""
+                                    style={{ width: '70%', height: '70%', objectFit: 'contain' }}
+                                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                                />
+                            ) : (
+                                <span style={{ fontSize: Math.round(size * 0.4) }}>{p.left?.emoji || '•'}</span>
+                            )}
                         </div>
                         <div>
                             <Typography variant="subtitle1" style={{ fontWeight: 700 }}>

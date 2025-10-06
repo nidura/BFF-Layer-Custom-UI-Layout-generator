@@ -1,16 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import Card from '@mui/material/Card';
-import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
-import TextField from '@mui/material/TextField';
-import Checkbox from '@mui/material/Checkbox';
-import Switch from '@mui/material/Switch';
-import Slider from '@mui/material/Slider';
-import Divider from '@mui/material/Divider';
-import MenuItem from '@mui/material/MenuItem';
-import Select from '@mui/material/Select';
-import LinearProgress from '@mui/material/LinearProgress';
+import { Button, Card, Typography, TextField, Checkbox, Switch, Slider, Select, MenuItem, Divider, LinearProgress } from '@mui/material';
 
 export default function UserRenderer({ layoutId }) {
     const [widgets, setWidgets] = useState([]);
@@ -19,12 +9,13 @@ export default function UserRenderer({ layoutId }) {
     useEffect(() => {
         if (!layoutId) return;
         setLoading(true);
-        axios.get(`http://localhost:8080/api/layouts/${layoutId}`)
-            .then(res => {
+        axios
+            .get(`http://localhost:8080/api/layouts/${layoutId}`)
+            .then((res) => {
                 const parsed = JSON.parse(res.data.schemaJson || '[]');
                 setWidgets(parsed);
             })
-            .catch(err => console.error('Failed to load layout', err))
+            .catch((err) => console.error('Failed to load layout', err))
             .finally(() => setLoading(false));
     }, [layoutId]);
 
@@ -77,6 +68,7 @@ export default function UserRenderer({ layoutId }) {
                         catch (err) { console.error('Pill card action failed', err); }
                     }
                 };
+                const size = p.left?.size ?? 44;
                 return (
                     <div key={w.id} style={{ margin: '10px 16px' }}>
                         <Card
@@ -98,16 +90,26 @@ export default function UserRenderer({ layoutId }) {
                             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                                 <div
                                     style={{
-                                        width: 44,
-                                        height: 44,
-                                        borderRadius: 22,
+                                        width: size,
+                                        height: size,
+                                        borderRadius: size / 2,
                                         background: p.left?.bg || '#f1f5f9',
                                         display: 'flex',
                                         alignItems: 'center',
-                                        justifyContent: 'center'
+                                        justifyContent: 'center',
+                                        overflow: 'hidden'
                                     }}
                                 >
-                                    <span style={{ fontSize: 18 }}>{p.left?.emoji || '•'}</span>
+                                    {p.left?.url ? (
+                                        <img
+                                            src={p.left.url}
+                                            alt=""
+                                            style={{ width: '70%', height: '70%', objectFit: 'contain' }}
+                                            onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                                        />
+                                    ) : (
+                                        <span style={{ fontSize: Math.round(size * 0.4) }}>{p.left?.emoji || '•'}</span>
+                                    )}
                                 </div>
                                 <div>
                                     <Typography variant="subtitle1" style={{ fontWeight: 700 }}>

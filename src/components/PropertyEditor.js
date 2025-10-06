@@ -58,11 +58,26 @@ export default function PropertyEditor({ widget, onChange }) {
                         value={p.left?.bg || '#f1f5f9'}
                         onChange={e => set('left', { ...(p.left || {}), bg: e.target.value })}
                     />
-                    <label>Emoji</label>
+                    <label>Icon URL</label>
+                    <input
+                        type="text"
+                        placeholder="https://.../icon.png"
+                        value={p.left?.url || ''}
+                        onChange={e => set('left', { ...(p.left || {}), url: e.target.value })}
+                    />
+                    <label>Emoji (fallback)</label>
                     <input
                         type="text"
                         value={p.left?.emoji || '💳'}
                         onChange={e => set('left', { ...(p.left || {}), emoji: e.target.value })}
+                    />
+                    <label>Size (px)</label>
+                    <input
+                        type="number"
+                        min={28}
+                        max={72}
+                        value={p.left?.size ?? 44}
+                        onChange={e => set('left', { ...(p.left || {}), size: Number(e.target.value || 44) })}
                     />
 
                     <h4>Trailing</h4>
@@ -97,8 +112,6 @@ export default function PropertyEditor({ widget, onChange }) {
                     </select>
                 </>
             )}
-
-            {/* existing editors for other widget types remain unchanged */}
         </div>
     );
 }
