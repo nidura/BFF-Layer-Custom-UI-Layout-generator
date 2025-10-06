@@ -1,246 +1,348 @@
-import React, { useEffect, useState } from "react";
-import axios from "axios";
-import {
-    Button,
-    Card,
-    Typography,
-    TextField,
-    Checkbox,
-    Switch,
-    Slider,
-    Select,
-    MenuItem,
-    Divider,
-    LinearProgress,
-} from "@mui/material";
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
+import Card from '@mui/material/Card';
+import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
+import TextField from '@mui/material/TextField';
+import Checkbox from '@mui/material/Checkbox';
+import Switch from '@mui/material/Switch';
+import Slider from '@mui/material/Slider';
+import Divider from '@mui/material/Divider';
+import MenuItem from '@mui/material/MenuItem';
+import Select from '@mui/material/Select';
+import LinearProgress from '@mui/material/LinearProgress';
 
 export default function UserRenderer({ layoutId }) {
     const [widgets, setWidgets] = useState([]);
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        axios
-            .get(`http://localhost:8080/api/layouts/${layoutId}`)
-            .then((res) => {
-                const parsed = JSON.parse(res.data.schemaJson || "[]");
+        if (!layoutId) return;
+        setLoading(true);
+        axios.get(`http://localhost:8080/api/layouts/${layoutId}`)
+            .then(res => {
+                const parsed = JSON.parse(res.data.schemaJson || '[]');
                 setWidgets(parsed);
             })
-            .catch((err) => console.error("Failed to load layout", err));
+            .catch(err => console.error('Failed to load layout', err))
+            .finally(() => setLoading(false));
     }, [layoutId]);
 
-    return (
-        <div
-            style={{
-                flex: 1,
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                background: "#e9ecef",
-                minHeight: "100vh",
-            }}
-        >
-            {/* 📱 Mobile Device Frame */}
-            <div
-                style={{
-                    width: "390px",
-                    height: "844px",
-                    background: "#fff",
-                    borderRadius: "40px",
-                    boxShadow: "0 0 20px rgba(0,0,0,0.2)",
-                    border: "8px solid #000",
-                    overflow: "hidden",
-                    display: "flex",
-                    flexDirection: "column",
-                }}
-            >
-                {/* Inner Scrollable Screen */}
-                <div
-                    style={{
-                        flex: 1,
-                        overflowY: "auto",
-                        padding: "20px",
-                        background: "#f8f9fa",
-                    }}
-                >
-                    {widgets.length === 0 ? (
-                        <Typography
-                            variant="body2"
-                            color="text.secondary"
-                            style={{ textAlign: "center", marginTop: "50%" }}
-                        >
-                            📲 No layout found
-                        </Typography>
-                    ) : (
-                        widgets.map((w) => (
-                            <div
-                                key={w.id}
-                                style={{
-                                    marginBottom: "12px",
-                                    padding: "10px",
-                                    borderRadius: "8px",
-                                    background: "#fff",
-                                    boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-                                }}
-                            >
-                                {renderWidget(w)}
-                            </div>
-                        ))
-                    )}
-                </div>
+    const accented = (title, accent) => {
+        if (!accent?.text || !title?.includes(accent.text)) return title || '';
+        const parts = title.split(accent.text);
+        return (
+            <span>
+        {parts[0]}
+                <span style={{ color: accent.color || '#E11D48' }}>{accent.text}</span>
+                {parts.slice(1).join(accent.text)}
+      </span>
+        );
+    };
 
-                {/* Home indicator */}
-                <div
-                    style={{
-                        height: "5px",
-                        width: "120px",
-                        background: "#222",
-                        borderRadius: "3px",
-                        margin: "10px auto",
-                    }}
-                />
-            </div>
-        </div>
-    );
-}
+    const renderWidget = (w) => {
+        const p = w.props || {};
+        switch (w.type) {
+            case 'header':
+                return (
+                    <div
+                        key={w.id}
+                        style={{
+                            position: 'sticky',
+                            top: 0,
+                            zIndex: 2,
+                            margin: 0,
+                            padding: 12,
+                            background: p.bgColor || '#ffffff',
+                            color: p.textColor || '#111',
+                            borderBottom: p.borderColor ? `1px solid ${p.borderColor}` : '1px solid rgba(0,0,0,0.08)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: p.centerTitle ? 'center' : 'flex-start',
+                            gap: 12
+                        }}
+                    >
+                        <div style={{ textAlign: p.centerTitle ? 'center' : 'left' }}>
+                            <div style={{ fontWeight: 700 }}>{p.title || 'Header'}</div>
+                            {p.caption ? <div style={{ fontSize: 12, opacity: 0.85 }}>{p.caption}</div> : null}
+                        </div>
+                    </div>
+                );
 
-/* 🧩 Widget rendering logic (same as Admin canvas) */
-function renderWidget(w) {
-    switch (w.type) {
-        case "label":
-            return (
-                <Typography variant="body1" style={{ textAlign: "center" }}>
-                    {w.props.text || "Label"}
-                </Typography>
-            );
-
-        case "textfield":
-            return (
-                <TextField
-                    label={w.props.label || "Text Field"}
-                    variant="outlined"
-                    fullWidth
-                    size="small"
-                />
-            );
-
-        case "numberfield":
-            return (
-                <TextField
-                    label={w.props.label || "Number Field"}
-                    type="number"
-                    variant="outlined"
-                    fullWidth
-                    size="small"
-                />
-            );
-
-        case "button":
-            return (
-                <Button
-                    variant="contained"
-                    fullWidth
-                    onClick={() =>
-                        handleAction(w.props.action?.url, w.props.action?.method)
+            case 'pill-card': {
+                const doAction = async (e) => {
+                    if (e) e.stopPropagation();
+                    if (p.action?.url) {
+                        try { await axios({ url: p.action.url, method: p.action.method || 'GET' }); }
+                        catch (err) { console.error('Pill card action failed', err); }
                     }
-                >
-                    {w.props.text || "Button"}
-                </Button>
-            );
+                };
+                return (
+                    <div key={w.id} style={{ margin: '10px 16px' }}>
+                        <Card
+                            onClick={doAction}
+                            style={{
+                                width: '100%',
+                                padding: 12,
+                                background: p.bgColor || '#F3F7FC',
+                                color: p.textColor || '#0f172a',
+                                border: p.borderColor ? `1px solid ${p.borderColor}` : '1px solid rgba(0,0,0,0.04)',
+                                borderRadius: p.radius ?? 14,
+                                boxShadow: p.shadow ? '0 10px 18px rgba(2, 44, 107, 0.08)' : 'none',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                gap: 12
+                            }}
+                        >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                <div
+                                    style={{
+                                        width: 44,
+                                        height: 44,
+                                        borderRadius: 22,
+                                        background: p.left?.bg || '#f1f5f9',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center'
+                                    }}
+                                >
+                                    <span style={{ fontSize: 18 }}>{p.left?.emoji || '•'}</span>
+                                </div>
+                                <div>
+                                    <Typography variant="subtitle1" style={{ fontWeight: 700 }}>
+                                        {accented(p.title || '', p.accent)}
+                                    </Typography>
+                                    <Typography variant="body2" color="text.secondary">
+                                        {p.subtitle || ''}
+                                    </Typography>
+                                </div>
+                            </div>
+                            {p.trailing === 'arrow' ? (
+                                <button
+                                    onClick={doAction}
+                                    style={{ background: 'transparent', border: 'none', color: '#60a5fa', fontSize: 18 }}
+                                >
+                                    →
+                                </button>
+                            ) : null}
+                        </Card>
+                    </div>
+                );
+            }
 
-        case "card":
-            return (
-                <Card style={{ padding: "1rem" }}>
-                    <Typography>{w.props.text || "Card Content"}</Typography>
-                </Card>
-            );
+            case 'label':
+                return (
+                    <div key={w.id} style={{ margin: '8px 16px' }}>
+                        <Typography
+                            variant="body1"
+                            style={{
+                                color: p.textColor || '#111',
+                                background: p.bgColor || 'transparent',
+                                padding: p.bgColor ? '8px 12px' : 0,
+                                borderRadius: 8,
+                                border: p.borderColor ? `1px solid ${p.borderColor}` : 'none'
+                            }}
+                        >
+                            {p.text || 'Label'}
+                        </Typography>
+                    </div>
+                );
 
-        case "image":
-            return (
-                <img
-                    src={w.props.src || "https://via.placeholder.com/300x150.png"}
-                    alt="img"
-                    style={{ width: "100%", borderRadius: "8px", objectFit: "cover" }}
-                />
-            );
+            case 'button':
+                return (
+                    <div key={w.id} style={{ margin: '8px 16px' }}>
+                        <Button
+                            variant={p.variant || 'contained'}
+                            style={{
+                                color: p.textColor || (p.variant === 'contained' ? '#fff' : undefined),
+                                background: p.bgColor || undefined,
+                                borderColor: p.borderColor || undefined,
+                                borderStyle: p.borderColor ? 'solid' : undefined,
+                                borderWidth: p.borderColor ? 1 : undefined
+                            }}
+                            onClick={async () => {
+                                if (p.action?.url) {
+                                    try { await axios({ url: p.action.url, method: p.action.method || 'GET' }); }
+                                    catch (err) { console.error('Button action failed', err); }
+                                }
+                            }}
+                        >
+                            {p.text || 'Button'}
+                        </Button>
+                    </div>
+                );
 
-        case "checkbox":
-            return (
-                <label style={{ display: "flex", alignItems: "center" }}>
-                    <Checkbox /> {w.props.label || "Checkbox"}
-                </label>
-            );
+            case 'card':
+                return (
+                    <div key={w.id} style={{ margin: '8px 16px' }}>
+                        <Card style={{ padding: 12 }}>
+                            <Typography variant="subtitle2">{p.title || 'Card'}</Typography>
+                            <Typography variant="body2">{p.text || 'Card content'}</Typography>
+                        </Card>
+                    </div>
+                );
 
-        case "switch":
-            return (
-                <label style={{ display: "flex", alignItems: "center" }}>
-                    <Switch /> {w.props.label || "Switch"}
-                </label>
-            );
+            case 'textfield':
+                return (
+                    <div key={w.id} style={{ margin: '8px 16px' }}>
+                        <TextField
+                            label={p.label || 'Text Field'}
+                            fullWidth
+                            size="small"
+                            sx={{
+                                '& .MuiInputBase-root': {
+                                    background: p.bgColor || undefined,
+                                    color: p.textColor || undefined
+                                },
+                                '& .MuiInputLabel-root': {
+                                    color: p.labelColor || undefined
+                                },
+                                '& .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: p.borderColor || undefined
+                                }
+                            }}
+                        />
+                    </div>
+                );
 
-        case "dropdown":
-            return (
-                <Select fullWidth size="small" displayEmpty>
-                    <MenuItem value="">
-                        {w.props.placeholder || "Select option"}
-                    </MenuItem>
-                    {(w.props.options || ["Option 1", "Option 2"]).map((opt) => (
-                        <MenuItem key={opt} value={opt}>
-                            {opt}
-                        </MenuItem>
-                    ))}
-                </Select>
-            );
+            case 'numberfield':
+                return (
+                    <div key={w.id} style={{ margin: '8px 16px' }}>
+                        <TextField
+                            type="number"
+                            label={p.label || 'Number Field'}
+                            fullWidth
+                            size="small"
+                            sx={{
+                                '& .MuiInputBase-root': {
+                                    background: p.bgColor || undefined,
+                                    color: p.textColor || undefined
+                                },
+                                '& .MuiInputLabel-root': {
+                                    color: p.labelColor || undefined
+                                },
+                                '& .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: p.borderColor || undefined
+                                }
+                            }}
+                        />
+                    </div>
+                );
 
-        case "slider":
-            return (
-                <Slider
-                    defaultValue={w.props.value || 50}
-                    min={w.props.min || 0}
-                    max={w.props.max || 100}
-                />
-            );
+            case 'checkbox':
+                return (
+                    <div key={w.id} style={{ margin: '8px 16px', display: 'flex', alignItems: 'center' }}>
+                        <Checkbox />
+                        <Typography variant="body2">{p.label || 'Checkbox'}</Typography>
+                    </div>
+                );
 
-        case "datepicker":
-            return (
-                <TextField
-                    type="date"
-                    fullWidth
-                    label={w.props.label || "Select Date"}
-                    InputLabelProps={{ shrink: true }}
-                />
-            );
+            case 'switch':
+                return (
+                    <div key={w.id} style={{ margin: '8px 16px', display: 'flex', alignItems: 'center' }}>
+                        <Switch />
+                        <Typography variant="body2" style={{ marginLeft: 8 }}>
+                            {p.label || 'Switch'}
+                        </Typography>
+                    </div>
+                );
 
-        case "progress":
-            return (
-                <div style={{ width: "100%" }}>
-                    <Typography variant="body2" color="text.secondary">
-                        {w.props.label || "Progress"}
-                    </Typography>
-                    <LinearProgress
-                        variant="determinate"
-                        value={w.props.value || 60}
-                        sx={{ height: 10, borderRadius: 5 }}
-                    />
-                </div>
-            );
+            case 'dropdown':
+                return (
+                    <div key={w.id} style={{ margin: '8px 16px' }}>
+                        <Select fullWidth size="small" value="">
+                            {(p.options || ['Option 1', 'Option 2']).map((opt, i) => (
+                                <MenuItem key={i} value={opt}>
+                                    {opt}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </div>
+                );
 
-        case "divider":
-            return <Divider />;
+            case 'slider':
+                return (
+                    <div key={w.id} style={{ margin: '8px 16px' }}>
+                        <Slider defaultValue={p.value ?? 30} />
+                    </div>
+                );
 
+            case 'datepicker':
+                return (
+                    <div key={w.id} style={{ margin: '8px 16px' }}>
+                        <TextField type="date" fullWidth size="small" />
+                    </div>
+                );
 
-        default:
-            return null;
-    }
-}
+            case 'progress':
+                return (
+                    <div key={w.id} style={{ margin: '8px 16px' }}>
+                        <LinearProgress variant="determinate" value={p.value ?? 40} />
+                    </div>
+                );
 
-/* 🔹 Simple API handler for button clicks */
-async function handleAction(url, method = "GET") {
-    if (!url) return;
-    try {
-        const res = await axios({ method, url });
-        console.log("API response:", res.data);
-        alert("Action success! Check console for data.");
-    } catch (err) {
-        console.error("Action failed:", err);
-        alert("API call failed.");
-    }
+            case 'divider':
+                return (
+                    <div key={w.id} style={{ margin: '8px 16px' }}>
+                        <Divider />
+                    </div>
+                );
+
+            case 'image':
+                return (
+                    <div key={w.id} style={{ margin: '8px 16px' }}>
+                        <div
+                            style={{
+                                width: '100%',
+                                height: 160,
+                                background: '#e5e7eb',
+                                borderRadius: 12,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: '#6b7280'
+                            }}
+                        >
+                            {p.alt || 'Image'}
+                        </div>
+                    </div>
+                );
+
+            case 'footer':
+                return (
+                    <div
+                        key={w.id}
+                        style={{
+                            position: 'sticky',
+                            bottom: 0,
+                            zIndex: 2,
+                            padding: 8,
+                            background: p.bgColor || '#ffffff',
+                            color: p.textColor || '#111',
+                            borderTop: p.borderColor ? `1px solid ${p.borderColor}` : '1px solid rgba(0,0,0,0.08)',
+                            display: 'flex',
+                            justifyContent: 'space-around'
+                        }}
+                    >
+                        {(p.actions || []).map((a, i) => (
+                            <button
+                                key={i}
+                                style={{ background: 'transparent', border: 'none', color: 'inherit', padding: 8 }}
+                            >
+                                {a.icon ? <span style={{ marginRight: 6 }}>{a.icon}</span> : null}
+                                {a.label || 'Action'}
+                            </button>
+                        ))}
+                    </div>
+                );
+
+            default:
+                return null;
+        }
+    };
+
+    if (loading) return <div style={{ padding: 16 }}><LinearProgress /></div>;
+
+    return <div>{widgets.map(renderWidget)}</div>;
 }
