@@ -73,6 +73,20 @@ export default function Canvas({ widgets, onSelect, onDelete }) {
         </IconButton>
     );
 
+    const Chevron = ({ color = '#9AA1A9', size = 18, weight = 2 }) => (
+        <span
+            style={{
+                display: 'inline-block',
+                width: size,
+                height: size,
+                borderTop: `${weight}px solid ${color}`,
+                borderRight: `${weight}px solid ${color}`,
+                transform: 'rotate(45deg)',
+                borderRadius: 1
+            }}
+        />
+    );
+
     const accented = (title, accent) => {
         if (!accent?.text || !title?.includes(accent.text)) return title || '';
         const parts = title.split(accent.text);
@@ -204,7 +218,18 @@ export default function Canvas({ widgets, onSelect, onDelete }) {
                             </Typography>
                         </div>
                     </div>
-                    {p.trailing === 'arrow' ? <span style={{ color: '#60a5fa', fontSize: 18 }}>→</span> : null}
+                    {(p.trailing?.type === 'chevron') || p.trailing === 'chevron' ? (
+                        <div
+                            onClick={(e) => { e.stopPropagation(); onSelect && onSelect(w.id); }}
+                            style={{ padding: 4 }}
+                        >
+                            <Chevron
+                                color={p.trailing?.color || '#000000'}
+                                size={p.trailing?.size ?? 18}
+                                weight={p.trailing?.weight ?? 2}
+                            />
+                        </div>
+                    ) : null}
                 </Card>
             </div>
         );

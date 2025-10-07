@@ -6,6 +6,20 @@ export default function UserRenderer({ layoutId }) {
     const [widgets, setWidgets] = useState([]);
     const [loading, setLoading] = useState(false);
 
+    const Chevron = ({ color = '#9AA1A9', size = 18, weight = 2 }) => (
+        <span
+            style={{
+                display: 'inline-block',
+                width: size,
+                height: size,
+                borderTop: `${weight}px solid ${color}`,
+                borderRight: `${weight}px solid ${color}`,
+                transform: 'rotate(45deg)',
+                borderRadius: 1
+            }}
+        />
+    );
+
     useEffect(() => {
         if (!layoutId) return;
         setLoading(true);
@@ -120,12 +134,17 @@ export default function UserRenderer({ layoutId }) {
                                     </Typography>
                                 </div>
                             </div>
-                            {p.trailing === 'arrow' ? (
+                            {(p.trailing?.type === 'chevron') || p.trailing === 'chevron' ? (
                                 <button
                                     onClick={doAction}
-                                    style={{ background: 'transparent', border: 'none', color: '#60a5fa', fontSize: 18 }}
+                                    style={{ background: 'transparent', border: 'none', padding: 4 }}
+                                    aria-label="Open"
                                 >
-                                    →
+                                    <Chevron
+                                        color={p.trailing?.color || '#000000'}
+                                        size={p.trailing?.size ?? 18}
+                                        weight={p.trailing?.weight ?? 2}
+                                    />
                                 </button>
                             ) : null}
                         </Card>

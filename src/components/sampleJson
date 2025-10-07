@@ -1,0 +1,73 @@
+[
+    {
+        "id": "c2c2bc8b-f158-4bb9-a917-692d6c7febad",
+        "type": "header",
+        "props": {
+            "title": "Send Money",
+            "centerTitle": true,
+            "caption": "",
+            "borderColor": "#ffffff"
+        }
+    },
+    {
+        "id": "e609ab0e-6e19-49af-b7c4-19703de5b365",
+        "type": "pill-card",
+        "props": {
+            "title": "To a genie Digital Saver",
+            "bgColor": "#ffffff",
+            "left": {
+                "bg": "#ffffff",
+                "url": "https://ezcash-merchant-stage.s3-ap-southeast-1.amazonaws.com/billers/dialog.png"
+            },
+            "trailing": {
+                "type": "chevron",
+                "size": 12,
+                "weight": 2
+            },
+            "action": {
+                "url": "https://stg.finpla.lk/common/sof",
+                "method": "GET"
+            }
+        }
+    },
+    {
+        "id": "314207eb-cb13-4451-ba21-3532cddcc639",
+        "type": "pill-card",
+        "props": {
+            "title": "To an eZ Cash Wallet",
+            "left": {
+                "bg": "#ffffff",
+                "url": "https://bizenglish.adaderana.lk/wp-content/uploads/ez.png"
+            },
+            "bgColor": "#ffffff",
+            "trailing": {
+                "type": "chevron",
+                "size": 10
+            },
+            "action": {
+                "url": "https://stg.finpla.lk/common/sof",
+                "method": "GET"
+            }
+        }
+    },
+    {
+        "id": "3de8aeb0-efc0-439e-8d27-5d7df2df2752",
+        "type": "pill-card",
+        "props": {
+            "bgColor": "#ffffff",
+            "left": {
+                "bg": "#ffffff",
+                "url": "https://d7muxbod7yrru.cloudfront.net/MSME+sof.png"
+            },
+            "title": "To Other Bank Account",
+            "trailing": {
+                "type": "chevron",
+                "size": 10
+            },
+            "action": {
+                "url": "https://stg.finpla.lk/common/sof",
+                "method": "GET"
+            }
+        }
+    }
+]
